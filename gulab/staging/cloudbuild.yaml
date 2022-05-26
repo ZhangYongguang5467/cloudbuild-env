@@ -1,0 +1,39 @@
+steps:
+# - name: gcr.io/cloud-builders/gcloud
+#   args:
+#     - kms
+#     - decrypt
+#     - --ciphertext-file=kms/staging/staging-env.bin
+#     - --plaintext-file=env.json
+#     - --location=asia-northeast1
+#     - --keyring=gulab-staging-config
+#     - --key=staging-env
+
+# - name: 'golang:1.17.6'
+#   entrypoint: "bash"
+#   args: ['-c', 'go mod download && go mod tidy && go vet . && go build -ldflags="-s -w" -race -o bin/gulab main.go']
+
+# - name: 'gcr.io/cloud-builders/docker'
+#   entrypoint: 'bash'
+#   args: [ 
+#           '-c',
+#           'docker build -f $_CONFIG_PATH/Dockerfile -t asia.gcr.io/$PROJECT_ID/gulab:$_BRANCH_ -t asia.gcr.io/$PROJECT_ID/gulab:$SHORT_SHA .'
+#         ]
+
+# - name: 'gcr.io/cloud-builders/docker'
+#   args: ['push', 'asia.gcr.io/$PROJECT_ID/gulab:$SHORT_SHA']
+
+# - name: 'gcr.io/cloud-builders/docker'
+#   args: ['push', 'asia.gcr.io/$PROJECT_ID/gulab:$_BRANCH_']
+
+- name: 'asia.gcr.io/$PROJECT_ID/helm'
+  args: ['upgrade','--install', 'gulab', '$_CONFIG_PATH/gulab', '-n', 'gulab', '--set', 'image.tag=$_IMAGE_TAG']
+  env:
+    - 'CLOUDSDK_COMPUTE_ZONE=asia-northeast1'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=$_CLUSTER'
+
+- name: golang:1.16.6
+  entrypoint: "bash"
+  args: ['cloudbuild/cloudbuild.sh', '-w', '$_SLACK_WEBHOOK_URL', '-c', '$_SLACK_CHANNEL', '-u', '$_SLACK_USER_NAME', '-m', '$_SLACK_DEPLOY_TEXT', '-a', '$_SLACK_ALERT_TYPE', '-b', '$BRANCH_NAME', '-k', '$_CLUSTER', '-p', '<https://console.cloud.google.com/kubernetes/deployment/asia-northeast1/$_CLUSTER/gulab/gulab/overview?project=$PROJECT_ID|gulab>', '-C', '<https://asia.gcr.io/$PROJECT_ID/gulab:$_BRANCH_|$_BRANCH_>']
+
+timeout: 2400s

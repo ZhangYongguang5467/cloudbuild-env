@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "gulab.fullname" . }}-test-connection"
+  labels:
+    {{- include "gulab.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "gulab.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

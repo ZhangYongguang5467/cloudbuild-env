@@ -1,0 +1,13 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "gulab.fullname" . }}
+  labels:
+    {{- include "gulab.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "gulab.selectorLabels" . | nindent 8 }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+{{- end }}
